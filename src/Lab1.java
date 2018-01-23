@@ -30,7 +30,7 @@ public class Lab1 {
 	{
 	//while(true){
     	semaphore1.acquire(1);
-	System.out.print("IN");
+	System.out.print(":IN:");
 	System.out.print(state1.getState());
 
 	/*if(state1.getState()==10){
@@ -42,7 +42,7 @@ public class Lab1 {
 	int myId = s1.getTrainId(); 
 	updateState(state1, state2, s1.getXpos(), s1.getYpos(), myId, tsi, semaphore5c, semaphore8c, semaphore11c);
 	}
-	System.out.print("OUT");
+	System.out.print(":OUT:");
 	System.out.print(state1.getState());
 	semaphore1.release(1);
 	} 
@@ -390,198 +390,6 @@ public void updateState(StateHolder stateMyTrain,StateHolder stateOtherTrain,int
 	default:
 	   break;
 }
-
-/*
-public void updateState(StateHolder stateMyTrain,StateHolder stateOtherTrain,int xPos,int yPos,int TrainId,TSimInterface tsi,Integer speed1){
-    switch(stateMyTrain.getState()){
-       case 1:
-          this.exceptSwitch(tsi,3,11,0);
-          stateMyTrain.changeState(2);
-          break;
-       case 2:
-          if(xPos==1){
-		if(stateOtherTrain.getState()==6){
-		     this.exceptSwitch(tsi,4,9,1);
-                     stateMyTrain.changeState(5);
-                     break;
-                     }
-		else{
-		     this.exceptSwitch(tsi,4,9,0);
-                     stateMyTrain.changeState(6);
-                     break;
-               }
-          } 
-          else{
-          stateMyTrain.changeState(1);
-          //add wait and go back
-	  this.exceptSpeed(tsi,TrainId,speed1);
-          break;      
-          }
-       case 3:
-	  this.exceptSwitch(tsi,15,9,0);
-          stateMyTrain.changeState(4);
-          break;          
-       case 4:
-          if(xPos==1){
-		if(stateOtherTrain.getState()==6){
-		     this.exceptSwitch(tsi,4,9,1);
-                     stateMyTrain.changeState(5);
-                     break;
-                     }
-		else{
-		//stop
-		if((stateOtherTrain.getState()==9)||((stateOtherTrain.getState()==11))){
-		   while((stateOtherTrain.getState()==9)||(stateOtherTrain.getState()==11)||(stateOtherTrain.getState()==8)){
-			this.exceptSpeed(tsi,TrainId,0);
- }
-		this.exceptSpeed(tsi,TrainId,speed1);
-}
-		     this.exceptSwitch(tsi,4,9,0);
-                     stateMyTrain.changeState(6);
-                     break;
-               }
-          } 
-          else{
-          stateMyTrain.changeState(3);
-          //add wait and go back
-          this.exceptSpeed(tsi,TrainId,speed1); 
-          break;      
-          }
-       case 5:
-	    if(xPos==9){
-
-		this.exceptSwitch(tsi,15,9,0);
-		stateMyTrain.changeState(8);
-		break;
-            }
-	    else{
-		if((stateOtherTrain.getState()==4)||((stateOtherTrain.getState()==2))){
-		     this.exceptSwitch(tsi,3,11,0);
-                     stateMyTrain.changeState(2);
-                     break;
-                     }
-		else{
-		     this.exceptSwitch(tsi,3,11,1);
-                     stateMyTrain.changeState(4);
-                     break;}
-	    }
-       case 6:
-	    if(xPos==9){
-
-		this.exceptSwitch(tsi,15,9,1);
-		stateMyTrain.changeState(7);
-		break;
-            }
-	    else{
-		if((stateOtherTrain.getState()==4)||((stateOtherTrain.getState()==2))){
-		     this.exceptSwitch(tsi,3,11,0);
-                     stateMyTrain.changeState(2);
-                     break;
-                     }
-		else{
-		     this.exceptSwitch(tsi,3,11,1);
-                     stateMyTrain.changeState(4);
-                     break;}
-	    }
-       case 7:
-	    if(xPos==9){
-		this.exceptSwitch(tsi,4,9,1);
-		stateMyTrain.changeState(6);
-		break;
-            }
-	    else{
-		if((stateOtherTrain.getState()==9)||(stateOtherTrain.getState()==10)){
-		     this.exceptSwitch(tsi,17,7,1);
-                     stateMyTrain.changeState(11);
-                     break;
-                     }
-		else{
-		     this.exceptSwitch(tsi,17,7,0);
-                     stateMyTrain.changeState(9);
-                     break;}
-	    }
-       case 8:
-	    if(xPos==9){
-		//stop
-		if((stateOtherTrain.getState()==4)||((stateOtherTrain.getState()==2))){
-		   while((stateOtherTrain.getState()==4)||((stateOtherTrain.getState()==2))){
-			this.exceptSpeed(tsi,TrainId,0);
- }
-		this.exceptSpeed(tsi,TrainId,speed1);
-}
-		this.exceptSwitch(tsi,4,9,1);
-		stateMyTrain.changeState(5);
-		break;
-            }
-	    else{
-		if((stateOtherTrain.getState()==9)||(stateOtherTrain.getState()==10)){
-		     this.exceptSwitch(tsi,17,7,1);
-                     stateMyTrain.changeState(11);
-                     break;
-                     }
-		else{
-		     this.exceptSwitch(tsi,17,7,0);
-                     stateMyTrain.changeState(9);
-                     break;}
-	    }
-       case 9:
-          if(xPos==19){
-		if(stateOtherTrain.getState()==8){
-		     this.exceptSwitch(tsi,15,9,0);
-                     stateMyTrain.changeState(7);
-                     break;
-                     }
-		else{
-		     this.exceptSwitch(tsi,15,9,1);
-                     stateMyTrain.changeState(8);
-                     break;
-               }
-          } 
-          else{
-          stateMyTrain.changeState(10);
-          //add wait and go back
-          this.exceptSpeed(tsi,TrainId,speed1); 
-          break;      
-          }
-       case 10:
-	  this.exceptSwitch(tsi,17,7,0);
-          stateMyTrain.changeState(9);
-          break;
-       case 11:
-          if(xPos==19){
-		if(stateOtherTrain.getState()==8){
-		     this.exceptSwitch(tsi,15,9,0);
-                     stateMyTrain.changeState(7);
-                     break;
-                     }
-		else{
-		     this.exceptSwitch(tsi,15,9,1);
-                     stateMyTrain.changeState(8);
-                     break;
-               }
-          } 
-          else{
-          stateMyTrain.changeState(12);
-          //add wait and go back
-          this.exceptSpeed(tsi,TrainId,speed1); 
-          break;      
-          }
-       case 12:
-	  this.exceptSwitch(tsi,17,7,0);
-          stateMyTrain.changeState(11);
-          break;
-       default:
-          break;
-}
-*/
-
 }
 }
-
-
-
-
-
-
-
 
