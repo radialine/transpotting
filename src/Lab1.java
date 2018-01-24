@@ -10,29 +10,25 @@ public class Lab1 {
 		Semaphore semaphore5c = new Semaphore(1);
 		Semaphore semaphore8c = new Semaphore(1);
 		Semaphore semaphore11c = new Semaphore(1);
-		new Thread(new Train(1, speed1, 14 , tsi)).start();
-		new Thread(new Train(2, speed2, 1, tsi)).start();
+
+		State state1 = new State(14, speed1, tsi);
+		State state2 = new State(1, speed2, tsi);
+		new Thread(new Train(1, tsi,semaphore5c, semaphore8c, semaphore11c)).start();
+		new Thread(new Train(2, tsi,semaphore5c, semaphore8c, semaphore11c)).start();
 	}
-
-	class Train implements Runnable {
-		private int id;
-		private int speed;
+	class State {
 		private int state;
+		private int speed;
 		private TSimInterface tsi;
-
-		public Train(int id, int speed, int state, TSimInterface tsi) {
-			this.id = id;
+		public State(int state, int speed, TSimInterface tsi){
+			this.state=state;
 			this.speed = speed;
-			this.state = state;
-			this.tsi = tsi;
 		}
-
-		public int getId(){
-			return id;
-		}
-
 		public int getState(){ 
-			return state;
+			return this.state;
+		}
+		public void changeState(int value){
+			this.state = value;
 		}
 		public Integer getSpeed(){ 
 			return speed;
@@ -41,70 +37,88 @@ public class Lab1 {
 		public void changeSpeed(Integer value) throws CommandException{
 			this.tsi.setSpeed(this.id, this.speed);
 		}
+		
+	}
 
-		public void changeState(int value){
-			this.state = value;
+	class Train implements Runnable {
+		private int id;
+		private TSimInterface tsi; 
+
+		public Train(int id, TSimInterface tsi, Semaphore semaphore5c,Semaphore semaphore8c, Semaphore semaphore11c) {
+			this.id = id;
+			this.tsi = tsi;
+		}
+
+		public int getId(){
+			return id;
+		}
+
+
+		public State chooseState(int id, State state1, State state2){
+			if (id==1){
+				return state1;
+			}
+			else{
+				return state2;
+			}
+		}
+		public State chooseOtherState(int id, State stete1, State state2){
+			if (id==1){
+				return state2;
+			}
+			else{
+				return state1;
+			}
 		}
 
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
 			while(true){
-				//				semaphore1.acquire(1);
-				System.out.print("1-IN:");
-				System.out.print(this.state);
-
-				SensorEvent s1 = tsi.getSensor(1);
-				System.out.println("==========");
-				if(s1.getStatus()==1){
-					int myId = s1.getTrainId(); 
-					updateState( int state2, s1.getXpos(), s1.getYpos(), myId, tsi);
+				SensorEvent s = tsi.getSensor(this.id);
+				if(s.getStatus()==1){ 
+					updateState(chooseState(this.id, state1, state2), chooseOtherState(this.id, state1, state2), s.getXpos(), s.getYpos(), id, this.tsi, semaphore5c, semaphore8c, semaphore11c);
 				}
-				System.out.print("1-OUT:");
-				System.out.print(this.state);
 			}
 		}
 
-		public void approachStation() throws InterruptedException, CommandException {
+		public void approachStation(State state) throws InterruptedException, CommandException {
 			Thread.sleep(1000);
-			changeSpeed(-this.getSpeed());
+			state.changeSpeed(-this.getSpeed());
 		}
 
-		public void acquireState5(int otherState) throws InterruptedException, CommandException {
-			exceptSpeed(_tsi, TrainId, 0);
+		public void acquireState5(State myState, State otherState,Semaphore semaphore5c) throws InterruptedException, CommandException {
+			tsi.setSpeed(this.id, 0);
 			semaphore5c.acquire(1);
-			System.err.println("sema5, myState: " + myState.getState() + ", otherState:"+otherState.getState() + ", trainid:"+ TrainId);
+
 			if((myState.getState()==3)||(myState.getState()==4)){
-				//			if((otherState.getState()==6)||(otherState.getState()==8)){
 				if(otherState.getState()==7 ||(otherState.getState()==8) ){
-					exceptSwitch(_tsi,3,11,0);
-					exceptSwitch(_tsi,4,9,0);
-					exceptSpeed(_tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = _tsi.getSensor(TrainId);
+					tsi.setSwitch(3,11,0);
+					tsi.setSwitch(4,9,0);
+					tsi.setSpeed(this.id, myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(6);			
 				}
 				else{
-					_tsi.setSwitch(4, 9, 1);
-					_tsi.setSwitch(3, 11, 1);
-					//				exceptSwitch(tsi,15,9,1);
-					exceptSpeed(_tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = _tsi.getSensor(TrainId);
+					tsi.setSwitch(4, 9, 1);
+					tsi.setSwitch(3, 11, 1);
+					tsi.setSpeed(this.id, myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(7);
 				}
 			}
 			else{
 				if((otherState.getState()==3)||(otherState.getState()==1)){
-					exceptSwitch(_tsi,3,11,1);
-					exceptSwitch(_tsi,4,9,0);
-					exceptSpeed(_tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = _tsi.getSensor(TrainId);
+					tsi.setSwitch(3,11,1);
+					tsi.setSwitch(4,9,0);
+					tsi.setSpeed(this.id, myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(3);					
 				}
 				else{
-					exceptSwitch(_tsi,3,11,0);
-					exceptSwitch(_tsi,4,9,0);
-					exceptSpeed(_tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = _tsi.getSensor(TrainId);
+					tsi.setSwitch(3,11,0);
+					tsi.setSwitch(4,9,0);
+					tsi.setSpeed(this.id,myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(4);				
 				}
 			}
@@ -112,48 +126,40 @@ public class Lab1 {
 
 		}
 
-		public void acquireState8(StateHolder myState, StateHolder otherState, TSimInterface tsi, int TrainId, Semaphore semaphore8c) throws InterruptedException, CommandException{
-			exceptSpeed(tsi, TrainId, 0);
+		public void acquireState8(StateHolder myState, StateHolder otherState,Semaphore semaphore8c) throws InterruptedException, CommandException{
+			tsi.setSpeed(this.id, 0);
 			myState.changeState(8);
 			semaphore8c.acquire(1);
-			if(otherState.getState()==11){
-				if(TrainId==1){
-					tsi.getSensor(2);
-				}
-				else{
-					tsi.getSensor(1);		
-				}
-			}
+
 			if((myState.getState()==6)||(myState.getState()==7)){
 				if((otherState.getState()==10)||(otherState.getState()==12)){
-					exceptSwitch(tsi,15,9,0);
-					exceptSwitch(tsi,17,7,1);
-					exceptSpeed(tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(TrainId);
+					tsi.setSwitch(15,9,0);
+					tsi.setSwitch(17,7,1);
+					tsi.setSpeed(this.id, myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(9);
 				}
 				else{
-					exceptSwitch(tsi,15,9,0);
-					exceptSwitch(tsi,17,7,0);
-					exceptSpeed(tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(TrainId);
+					tsi.setSwitch(15,9,0);
+					tsi.setSwitch(17,7,0);
+					tsi.setSpeed(this.id,myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(10);			
 				}
 			}
 			else{
 				if((otherState.getState()==7)||(otherState.getState()==5)){
-					exceptSwitch(tsi,17,7,0);
-					exceptSwitch(tsi,15,9,0);
-					exceptSpeed(tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(TrainId);
+					tsi.setSwitch(17,7,0);
+					tsi.setSwitch(15,9,0);
+					tsi.setSpeed(this.id,myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(6);					
 				}
 				else{ // modified
-					exceptSwitch(tsi,17,7,0);
-					//				exceptSwitch(tsi,4,9,0);
-					exceptSwitch(tsi,15,9,1);
-					exceptSpeed(tsi,TrainId,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(TrainId);
+					tsi.setSwitch(17,7,0);
+					tsi.setSwitch(15,9,1);
+					tsi.setSpeed(this.id,myState.getSpeed());
+					SensorEvent s5c = tsi.getSensor(this.id);
 					myState.changeState(7);				
 				}
 			}
@@ -161,44 +167,16 @@ public class Lab1 {
 
 		}
 
-		public void acquireState11(StateHolder myState, StateHolder otherState, TSimInterface tsi, int TrainId, Semaphore semaphore11c, int x, int y) throws InterruptedException, CommandException {
-			//x, y ?
-			exceptSpeed(tsi, TrainId, 0);
+		public void acquireState11(StateHolder myState,Semaphore semaphore11c) throws InterruptedException, CommandException {
+			
+			tsi.setSpeed(this.id, 0);
 			semaphore11c.acquire(1);
 			myState.changeState(11);
-			exceptSpeed(tsi, TrainId, myState.getSpeed());
-
-
-			/*
-	SensorEvent s = tsi.getSensor(TrainId);
-
-
-	if(s.getXpos()==9){
-
-		myState.changeState(10);
-		System.out.print("bien");
-	}
-
-	else if(s.getXpos()==7){
-		myState.changeState(12);		
-	}
-	else if(s.getXpos()==8){
-			if(s.getYpos()==6){
-				myState.changeState(13);
-			}
-			else{
-				myState.changeState(9);
-			}
-		}		
-
-
-	System.out.print("teeest");
-
-			 */
+			tsi.setSpeed(this.id, myState.getSpeed());
 			semaphore11c.release(1);
 		}
 
-		public void updateState(StateHolder stateMyTrain,StateHolder stateOtherTrain,int xPos,int yPos,int TrainId,TSimInterface tsi) throws InterruptedException, CommandException{
+		public void updateState(StateHolder stateMyTrain,StateHolder stateOtherTrain,int xPos,int yPos,int TrainId,TSimInterface tsi,Semaphore semaphore5c,Semaphore semaphore8c, Semaphore semaphore11c) throws InterruptedException, CommandException{
 
 			switch(stateMyTrain.getState()){
 			case 1:
@@ -207,9 +185,9 @@ public class Lab1 {
 			case 2:
 				stateMyTrain.changeState(4);
 				break;		
-			case 3: // modified
+			case 3: 
 				if(xPos==14){
-					approachStation(tsi, TrainId, stateMyTrain);
+					approachStation(stateMyTrain);
 					stateMyTrain.changeState(1);
 					break;
 				}
@@ -218,56 +196,56 @@ public class Lab1 {
 				//			}
 				else{
 					System.out.println("get into state5");
-					acquireState5(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState5(stateMyTrain, stateOtherTrain, semaphore5c);
 					break;
 				}
 			case 4:
 				if(xPos==14){
-					approachStation(tsi, TrainId, stateMyTrain);
+					approachStation(stateMyTrain);
 					stateMyTrain.changeState(2);
 					break;
 				}
 				else{
-					acquireState5(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState5(stateMyTrain, stateOtherTrain, semaphore5c);
 					break;
 				}
 			case 6: 
 				if(xPos==5){
-					acquireState5(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState5(stateMyTrain, stateOtherTrain, semaphore5c);
 					break;
 				}
 				else{
-					acquireState8(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState8(stateMyTrain, stateOtherTrain, semaphore8c);
 					break;
 				}
 
 			case 7: // modified
 				//			if(xPos==4){
 				if(xPos==15){
-					acquireState5(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState5(stateMyTrain, stateOtherTrain, semaphore5c);
 					break;
 				}
 				else{
-					acquireState8(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState8(stateMyTrain, stateOtherTrain, semaphore8c);
 					break;
 				}
 			case 9:
 				if(xPos==17){
-					acquireState8(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState8(stateMyTrain, stateOtherTrain, semaphore8c);
 					break;
 				}
 				else{
-					acquireState11(stateMyTrain, stateOtherTrain, tsi, TrainId, xPos, yPos);
+					acquireState11(stateMyTrain, semaphore11c);
 					break;
 				}
 			case 10:
 				//			System.out.print("!!!!!!!!!!!!!!!!!!!!!!!");
 				if(xPos==16){
-					acquireState8(stateMyTrain, stateOtherTrain, tsi, TrainId);
+					acquireState8(stateMyTrain, stateOtherTrain, semaphore8c);
 					break;
 				}
 				else{
-					acquireState11(stateMyTrain, stateOtherTrain, tsi, TrainId, xPos, yPos);
+					acquireState11(stateMyTrain, semaphore11c);
 					break;
 				}
 
@@ -294,22 +272,22 @@ public class Lab1 {
 
 			case 12:
 				if(xPos==14){
-					approachStation(tsi, TrainId, stateMyTrain);
+					approachStation(stateMyTrain);
 					stateMyTrain.changeState(14);
 					break;
 				}
 				else{
-					acquireState11(stateMyTrain, stateOtherTrain, tsi, TrainId, xPos, yPos);
+					acquireState11(stateMyTrain, semaphore11c);
 					break;
 				}
 			case 13:
 				if(xPos==14){
-					approachStation(tsi, TrainId, stateMyTrain);
+					approachStation(stateMyTrain);
 					stateMyTrain.changeState(15);
 					break;
 				}
 				else{
-					acquireState11(stateMyTrain, stateOtherTrain, tsi, TrainId, xPos, yPos);
+					acquireState11(stateMyTrain, semaphore11c);
 
 					break;
 				}
