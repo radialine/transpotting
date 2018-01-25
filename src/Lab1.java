@@ -16,30 +16,40 @@ public class Lab1 {
 		semaphore8c = new Semaphore(1);
 		semaphore11c = new Semaphore(1);
 
-		state1 = new State(14);
-		state2 = new State(1);
+		state1 = new State(14, 0);
+		state2 = new State(1, 0);
 		new Thread(new Train(1, speed1, state1)).start();
 		new Thread(new Train(2, speed2, state2)).start();
 	}
 	
 	class State {
 		private int state;
-		public State(int state){
+		private int working;
+		public State(int state, int working){
 			this.state = state;
+			this.working = working;
+		}
+		public int getWorking(){
+			return this.working;
+		}
+		public void changeWorking(int working){
+			this.working = working;
 		}
 		public int getState(){ 
 			return this.state;
 		}
+
 		public void changeState(int value){
 			this.state = value;
-		}
-/*		public Integer getSpeed(){
+		}/*
+		public Integer getSpeed(){
 			return speed;
 		}
 
 		public void changeSpeed(Integer value) throws CommandException{
 			tsi.setSpeed(this.id, this.speed);
-		}*/
+		}
+*/
 	}
 
 	class Train implements Runnable {
@@ -77,10 +87,13 @@ public class Lab1 {
 			try {
 				tsi.setSpeed(this.id, this.speed);
 				while(true){
+					System.out.println("================================");
+					System.out.println("INState for train " + this.id + " " + chooseState().getState());
 					SensorEvent s;		
 					s = tsi.getSensor(this.id);
-					if(s.getStatus()==1){ 
+					if((s.getStatus()==1)&&(chooseState().getWorking()==0)){ 
 						updateState(chooseState(), chooseOtherState(), s.getXpos(), s.getYpos(), id);
+						System.out.println("OutState for train " + this.id + " " + chooseState().getState());
 					}
 				}
 			} catch (CommandException e) {
@@ -94,44 +107,68 @@ public class Lab1 {
 		}
 
 		public void approachStation(State state) throws InterruptedException, CommandException {
+			
 			Thread.sleep(1000);
+			tsi.setSpeed(this.id, 0);
+			Thread.sleep(5000);
 			this.changeSpeed(-this.speed);
 		}
 
 		public void acquireState5(State myState, State otherState) throws InterruptedException, CommandException {
-//			tsi.setSpeed(this.id, 0);
+
+			myState.changeWorking(1);
+			tsi.setSpeed(this.id, 0);
 			semaphore5c.acquire(1);
 
 			if((myState.getState()==3)||(myState.getState()==4)){
 				if(otherState.getState()==7 ||(otherState.getState()==8) ){
 					tsi.setSwitch(3,11,0);
 					tsi.setSwitch(4,9,0);
-//					tsi.setSpeed(this.id, myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
-					myState.changeState(6);			
-				}
+					tsi.setSpeed(this.id, this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==7)&&(sp.getYpos()==9)&&(sp.getStatus()==1))){
+					
+					sp = tsi.getSensor(this.id);
+					}
+					myState.changeState(6);	
+					myState.changeWorking(0);	
+					}	
+				
 				else{
-					tsi.setSwitch(4, 9, 1);
+					tsi.setSwitch(4, 9, 0);
 					tsi.setSwitch(3, 11, 1);
-//					tsi.setSpeed(this.id, myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
+					tsi.setSpeed(this.id, this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==4)&&(sp.getYpos()==10)&&(sp.getStatus()==1))){
+					
+					sp = tsi.getSensor(this.id);
+					}
 					myState.changeState(7);
+					myState.changeWorking(0);
 				}
 			}
 			else{
 				if((otherState.getState()==3)||(otherState.getState()==1)){
-					tsi.setSwitch(3,11,1);
-					tsi.setSwitch(4,9,0);
-//					tsi.setSpeed(this.id, myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
-					myState.changeState(3);					
+					tsi.setSwitch(3,11,0);
+					tsi.setSwitch(4,9,1);
+					tsi.setSpeed(this.id, this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==3)&&(sp.getYpos()==12)&&(sp.getStatus()==1))){
+					sp = tsi.getSensor(this.id);
+					}
+					myState.changeState(4);	
+					myState.changeWorking(0);				
 				}
 				else{
-					tsi.setSwitch(3,11,0);
-					tsi.setSwitch(4,9,0);
-//					tsi.setSpeed(this.id,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
-					myState.changeState(4);				
+					tsi.setSwitch(3,11,1);
+					tsi.setSwitch(4,9,1);
+					tsi.setSpeed(this.id,this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==4)&&(sp.getYpos()==11)&&(sp.getStatus()==1))){
+					sp = tsi.getSensor(this.id);
+					}
+					myState.changeState(3);		
+					myState.changeWorking(0);		
 				}
 			}
 			semaphore5c.release(1);
@@ -139,40 +176,63 @@ public class Lab1 {
 		}
 
 		public void acquireState8(State myState, State otherState) throws InterruptedException, CommandException{
-//			tsi.setSpeed(this.id, 0);
-			myState.changeState(8);
+			myState.changeWorking(1);
+			tsi.setSpeed(this.id, 0);
 			semaphore8c.acquire(1);
+			System.out.println("trying to acquire State 8");
+			System.out.println("Current state" + myState.getState());
 
 			if((myState.getState()==6)||(myState.getState()==7)){
-				if((otherState.getState()==10)||(otherState.getState()==12)){
-					tsi.setSwitch(15,9,0);
+				if((otherState.getState()==10)||(otherState.getState()==12)||(otherState.getState()==14)){
+					tsi.setSwitch(15,9,1);
 					tsi.setSwitch(17,7,1);
-//					tsi.setSpeed(this.id, myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
+					tsi.setSpeed(this.id, this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==17)&&(sp.getYpos()==8)&&(sp.getStatus()==1))){
+					System.out.println(sp.getXpos() + " " + sp.getYpos() + " " + sp.getStatus());
+					sp = tsi.getSensor(this.id);
+					}
 					myState.changeState(9);
+					myState.changeWorking(0);
 				}
 				else{
-					tsi.setSwitch(15,9,0);
+					tsi.setSwitch(15,9,1);
 					tsi.setSwitch(17,7,0);
-//					tsi.setSpeed(this.id,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
-					myState.changeState(10);			
+					tsi.setSpeed(this.id,this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==16)&&(sp.getYpos()==7)&&(sp.getStatus()==1))){
+					
+					sp = tsi.getSensor(this.id);
+					}
+					myState.changeState(10);
+					myState.changeWorking(0);			
 				}
 			}
 			else{
 				if((otherState.getState()==7)||(otherState.getState()==5)){
 					tsi.setSwitch(17,7,0);
 					tsi.setSwitch(15,9,0);
-//					tsi.setSpeed(this.id,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
-					myState.changeState(6);					
+					tsi.setSpeed(this.id,this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==14)&&(sp.getYpos()==9)&&(sp.getStatus()==1))){
+					
+					sp = tsi.getSensor(this.id);
+					}
+					myState.changeState(6);	
+					myState.changeWorking(0);				
 				}
 				else{ // modified
+					System.out.println("Wrong path");
 					tsi.setSwitch(17,7,0);
 					tsi.setSwitch(15,9,1);
-//					tsi.setSpeed(this.id,myState.getSpeed());
-					SensorEvent s5c = tsi.getSensor(this.id);
-					myState.changeState(7);				
+					tsi.setSpeed(this.id,this.getSpeed());
+					SensorEvent sp = tsi.getSensor(this.id);
+					while(!((sp.getXpos()==12)&&(sp.getYpos()==10)&&(sp.getStatus()==1))){
+					
+					sp = tsi.getSensor(this.id);
+					}
+					myState.changeState(7);		
+					myState.changeWorking(0);		
 				}
 			}
 			semaphore8c.release(1);
@@ -180,10 +240,12 @@ public class Lab1 {
 		}
 
 		public void acquireState11(State myState) throws InterruptedException, CommandException {
-//			tsi.setSpeed(this.id, 0);
+			myState.changeWorking(1);
+			tsi.setSpeed(this.id, 0);
 			semaphore11c.acquire(1);
 			myState.changeState(11);
-//			tsi.setSpeed(this.id, myState.getSpeed());
+			tsi.setSpeed(this.id, this.getSpeed());
+			myState.changeWorking(0);
 			semaphore11c.release(1);
 		}
 
@@ -221,7 +283,7 @@ public class Lab1 {
 					break;
 				}
 			case 6: 
-				if(xPos==5){
+				if(xPos==7){
 					acquireState5(stateMyTrain, stateOtherTrain);
 					break;
 				}
@@ -232,12 +294,13 @@ public class Lab1 {
 
 			case 7: // modified
 				//			if(xPos==4){
-				if(xPos==15){
-					acquireState5(stateMyTrain, stateOtherTrain);
+				if(xPos==12){
+					acquireState8(stateMyTrain, stateOtherTrain);
 					break;
 				}
 				else{
-					acquireState8(stateMyTrain, stateOtherTrain);
+					System.out.println("++++++++");
+					acquireState5(stateMyTrain, stateOtherTrain);
 					break;
 				}
 			case 9:
