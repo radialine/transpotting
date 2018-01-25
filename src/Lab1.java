@@ -12,28 +12,20 @@ public class Lab1 {
 	public Lab1(Integer speed1, Integer speed2) {
 		tsi = TSimInterface.getInstance();
 
-		semaphore5c = new Semaphore(1);
-		semaphore8c = new Semaphore(1);
-		semaphore11c = new Semaphore(1);
+		semaphore5c = new Semaphore(1, true);
+		semaphore8c = new Semaphore(1, true);
+		semaphore11c = new Semaphore(1, true);
 
-		state1 = new State(14, 0);
-		state2 = new State(1, 0);
+		state1 = new State(14);
+		state2 = new State(1);
 		new Thread(new Train(1, speed1, state1)).start();
 		new Thread(new Train(2, speed2, state2)).start();
 	}
 	
 	class State {
 		private int state;
-		private int working;
-		public State(int state, int working){
+		public State(int state){
 			this.state = state;
-			this.working = working;
-		}
-		public int getWorking(){
-			return this.working;
-		}
-		public void changeWorking(int working){
-			this.working = working;
 		}
 		public int getState(){ 
 			return this.state;
@@ -91,7 +83,7 @@ public class Lab1 {
 					System.out.println("INState for train " + this.id + " " + chooseState().getState());
 					SensorEvent s;		
 					s = tsi.getSensor(this.id);
-					if((s.getStatus()==1)&&(chooseState().getWorking()==0)){ 
+					if((s.getStatus()==1)){ 
 						updateState(chooseState(), chooseOtherState(), s.getXpos(), s.getYpos(), id);
 						System.out.println("OutState for train " + this.id + " " + chooseState().getState());
 					}
@@ -115,10 +107,9 @@ public class Lab1 {
 		}
 
 		public void acquireState5(State myState, State otherState) throws InterruptedException, CommandException {
-
-			myState.changeWorking(1);
 			tsi.setSpeed(this.id, 0);
 			semaphore5c.acquire(1);
+			System.out.println("State 5 acquired by Train " + this.id);
 
 			if((myState.getState()==3)||(myState.getState()==4)){
 				if(otherState.getState()==7 ||(otherState.getState()==8) ){
@@ -130,8 +121,7 @@ public class Lab1 {
 					
 					sp = tsi.getSensor(this.id);
 					}
-					myState.changeState(6);	
-					myState.changeWorking(0);	
+					myState.changeState(6);		
 					}	
 				
 				else{
@@ -144,7 +134,6 @@ public class Lab1 {
 					sp = tsi.getSensor(this.id);
 					}
 					myState.changeState(7);
-					myState.changeWorking(0);
 				}
 			}
 			else{
@@ -156,8 +145,7 @@ public class Lab1 {
 					while(!((sp.getXpos()==3)&&(sp.getYpos()==12)&&(sp.getStatus()==1))){
 					sp = tsi.getSensor(this.id);
 					}
-					myState.changeState(4);	
-					myState.changeWorking(0);				
+					myState.changeState(4);					
 				}
 				else{
 					tsi.setSwitch(3,11,1);
@@ -167,18 +155,20 @@ public class Lab1 {
 					while(!((sp.getXpos()==4)&&(sp.getYpos()==11)&&(sp.getStatus()==1))){
 					sp = tsi.getSensor(this.id);
 					}
-					myState.changeState(3);		
-					myState.changeWorking(0);		
+					myState.changeState(3);				
 				}
 			}
+			
 			semaphore5c.release(1);
+			System.out.println("Semaphore 5c released");
 
 		}
 
 		public void acquireState8(State myState, State otherState) throws InterruptedException, CommandException{
-			myState.changeWorking(1);
 			tsi.setSpeed(this.id, 0);
+			System.out.println("Trying to get state 8 " + this.id);
 			semaphore8c.acquire(1);
+			System.out.println("State 8 acquired by Train " + this.id);
 			System.out.println("trying to acquire State 8");
 			System.out.println("Current state" + myState.getState());
 
@@ -193,7 +183,6 @@ public class Lab1 {
 					sp = tsi.getSensor(this.id);
 					}
 					myState.changeState(9);
-					myState.changeWorking(0);
 				}
 				else{
 					tsi.setSwitch(15,9,1);
@@ -204,22 +193,20 @@ public class Lab1 {
 					
 					sp = tsi.getSensor(this.id);
 					}
-					myState.changeState(10);
-					myState.changeWorking(0);			
+					myState.changeState(10);			
 				}
 			}
 			else{
-				if((otherState.getState()==7)||(otherState.getState()==5)){
+				if((otherState.getState()==7)||(otherState.getState()==5)||(otherState.getState()==3)||(otherState.getState()==4)){
 					tsi.setSwitch(17,7,0);
 					tsi.setSwitch(15,9,0);
 					tsi.setSpeed(this.id,this.getSpeed());
 					SensorEvent sp = tsi.getSensor(this.id);
-					while(!((sp.getXpos()==14)&&(sp.getYpos()==9)&&(sp.getStatus()==1))){
+					while(!((sp.getXpos()==12)&&(sp.getYpos()==9)&&(sp.getStatus()==1))){
 					
 					sp = tsi.getSensor(this.id);
 					}
-					myState.changeState(6);	
-					myState.changeWorking(0);				
+					myState.changeState(6);				
 				}
 				else{ // modified
 					System.out.println("Wrong path");
@@ -231,21 +218,19 @@ public class Lab1 {
 					
 					sp = tsi.getSensor(this.id);
 					}
-					myState.changeState(7);		
-					myState.changeWorking(0);		
+					myState.changeState(7);				
 				}
 			}
 			semaphore8c.release(1);
+			System.out.println("Semaphore 8c released");
 
 		}
 
 		public void acquireState11(State myState) throws InterruptedException, CommandException {
-			myState.changeWorking(1);
 			tsi.setSpeed(this.id, 0);
 			semaphore11c.acquire(1);
 			myState.changeState(11);
 			tsi.setSpeed(this.id, this.getSpeed());
-			myState.changeWorking(0);
 			semaphore11c.release(1);
 		}
 
