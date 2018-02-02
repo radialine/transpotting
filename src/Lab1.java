@@ -31,8 +31,8 @@ public class Lab1 {
 		state1 = new State(12);
 		state2 = new State(3);
 		
-		new Thread(new Train(1, speed1, true, new boolean[]{false, false, false})).start();
-		new Thread(new Train(2, speed2, false, new boolean[]{false,false, false})).start();
+		new Thread(new Train(1, speed1, true, new boolean[]{false, false, false, false, false, false})).start();
+		new Thread(new Train(2, speed2, false, new boolean[]{false,false, false, false, false, false})).start();
 	}
 
 	public void addSensors(){
@@ -126,10 +126,11 @@ public class Lab1 {
 				else if(Arrays.equals(currSensor, sensors.get(2))){ // 5,11
 					System.out.println(this.id+","+this.direction + ","+semaphore34.availablePermits()+","+
 				semaphore5c.availablePermits());
-					if (this.direction){	semaphore5c.release();	}
+					if (this.direction){	semaphore5c.release(); this.semaphoreHolding[3] = false;	}
 					else {
 						tsi.setSpeed(this.id, 0);
 						semaphore5c.acquire();
+						this.semaphoreHolding[3] = true;
 						tsi.setSwitch(3, 11, 1); 
 						tsi.setSpeed(this.id, this.speed);
 						stateMyTrain.changeState(5);
@@ -141,16 +142,17 @@ public class Lab1 {
 				System.out.println("in state 4:"+semaphore67.availablePermits() + "," + this.semaphoreHolding.toString());
 				if( Arrays.equals(currSensor, sensors.get(1)) && this.direction){ // 12,13
 					if(semaphore34.availablePermits() != 0){
-						this.semaphoreHolding[0] = true;
 						semaphore34.acquire();
+						this.semaphoreHolding[0] = true;
 					}
 					approachStation(stateMyTrain);
 				}
 				else if(Arrays.equals(currSensor, sensors.get(3))){ // 5,13
-					if(this.direction) {	semaphore5c.release();	}
+					if(this.direction) {	semaphore5c.release();	this.semaphoreHolding[3] = false;}
 					else {
 						tsi.setSpeed(this.id, 0);
 						semaphore5c.acquire();
+						this.semaphoreHolding[3] = true;
 						tsi.setSwitch(3, 11, 0); 
 						tsi.setSpeed(this.id, this.speed);
 						stateMyTrain.changeState(5);
@@ -170,8 +172,9 @@ public class Lab1 {
 						tsi.setSwitch(3, 11, 1);
 					}
 					else{
-						this.semaphoreHolding[0] = true;
+						
 						semaphore34.acquire();
+						this.semaphoreHolding[0] = true;
 						stateMyTrain.changeState(4);
 						tsi.setSwitch(3, 11, 0);
 					}
@@ -186,8 +189,8 @@ public class Lab1 {
 						tsi.setSwitch(4, 9, 1);
 					}
 					else{
-						this.semaphoreHolding[1] = true;
 						semaphore67.acquire();
+						this.semaphoreHolding[1] = true;
 						stateMyTrain.changeState(7);
 						tsi.setSwitch(4, 9, 0);
 					}
@@ -199,19 +202,21 @@ public class Lab1 {
 					if(this.direction){
 						tsi.setSpeed(this.id, 0);
 						semaphore5c.acquire();
+						this.semaphoreHolding[3] = true;
 						tsi.setSwitch(4, 9, 1); 
 						stateMyTrain.changeState(5);
 					}
-					else{	semaphore5c.release(); 	}
+					else{	semaphore5c.release(); 	this.semaphoreHolding[3] = false;}
 				}
 				else{ // 13,9
 					if(!this.direction){
 						tsi.setSpeed(this.id, 0);
 						semaphore8c.acquire();
+						this.semaphoreHolding[4] = true;
 						tsi.setSwitch(15, 9, 0); 
 						stateMyTrain.changeState(8);
 					}
-					else {	semaphore8c.release();	}
+					else {	semaphore8c.release();	this.semaphoreHolding[4] = false;}
 				}
 				tsi.setSpeed(this.id, this.speed);
 				break;
@@ -222,19 +227,21 @@ public class Lab1 {
 					if(this.direction){
 						tsi.setSpeed(this.id, 0);
 						semaphore5c.acquire();
+						this.semaphoreHolding[3] = true;
 						tsi.setSwitch(4, 9, 0);
 						stateMyTrain.changeState(5);
 					}
-					else{	semaphore5c.release(); 	}
+					else{	semaphore5c.release(); 	this.semaphoreHolding[3] = false;}
 				}
 				else{ // 15,10
 					if(!this.direction){
 						tsi.setSpeed(this.id, 0);
 						semaphore8c.acquire();
+						this.semaphoreHolding[4] = true;
 						tsi.setSwitch(15, 9, 1); 
 						stateMyTrain.changeState(8);
 					}
-					else {	semaphore8c.release();	}
+					else {	semaphore8c.release();	this.semaphoreHolding[4] = false;}
 				} 
 				tsi.setSpeed(this.id, this.speed);
 				break;
@@ -252,8 +259,8 @@ public class Lab1 {
 						tsi.setSwitch(15, 9, 0);
 					}
 					else{
-						this.semaphoreHolding[1] = true;
 						semaphore67.acquire();
+						this.semaphoreHolding[1] = true;
 						stateMyTrain.changeState(7);
 						tsi.setSwitch(15, 9, 1);
 					}
@@ -268,8 +275,8 @@ public class Lab1 {
 						tsi.setSwitch(17, 7, 0);
 					}
 					else{
-						this.semaphoreHolding[2] = true;
 						semaphore910.acquire();
+						this.semaphoreHolding[2] = true;
 						stateMyTrain.changeState(9);
 						tsi.setSwitch(17, 7, 1); 
 					}
@@ -282,13 +289,15 @@ public class Lab1 {
 				if( Arrays.equals(currSensor, sensors.get(8))){ // 15,8
 					if(this.direction){
 						semaphore8c.acquire();
+						this.semaphoreHolding[4] = true;
 						tsi.setSwitch(17, 7, 1);
 						stateMyTrain.changeState(8);
 					}
-					else {	semaphore8c.release();	}
+					else {	semaphore8c.release();	this.semaphoreHolding[4] = false;}
 				}
-				else if (Arrays.equals(currSensor, sensors.get(10)) && !this.direction){ // 11,8	
+				else if (Arrays.equals(currSensor, sensors.get(10)) && !this.direction){ // 11,8
 					semaphore11c.acquire();
+					this.semaphoreHolding[5] = true;
 					stateMyTrain.changeState(11);
 				}
 				tsi.setSpeed(this.id, this.speed);
@@ -299,13 +308,15 @@ public class Lab1 {
 				if( Arrays.equals(currSensor, sensors.get(9))){ // 15,7
 					if(this.direction){
 						semaphore8c.acquire();
+						this.semaphoreHolding[4] = true;
 						tsi.setSwitch(17, 7, 0);
 						stateMyTrain.changeState(8);
 					}
-					else {	semaphore8c.release();}
+					else {	semaphore8c.release(); this.semaphoreHolding[4] = false;}
 				}
 				else if(Arrays.equals(currSensor, sensors.get(11)) && !this.direction){ // 11,7
 					semaphore11c.acquire();
+					this.semaphoreHolding[5] = true;
 					stateMyTrain.changeState(11);
 				}
 				tsi.setSpeed(this.id, this.speed);
@@ -337,6 +348,7 @@ public class Lab1 {
 					}
 				}
 				semaphore11c.release();
+				this.semaphoreHolding[5] = false;
 				tsi.setSpeed(this.id, this.speed);
 				break;
 
@@ -345,9 +357,10 @@ public class Lab1 {
 				if( Arrays.equals(currSensor, sensors.get(15)) && !this.direction){ // 12,3
 					approachStation(stateMyTrain);
 				}
-				else if(Arrays.equals(currSensor, sensors.get(12))){ // 6,7, direction must be true 
+				else if(Arrays.equals(currSensor, sensors.get(12))){ // 6,7, direction must be true
 					tsi.setSpeed(this.id, 0);
 					semaphore11c.acquire();
+					this.semaphoreHolding[5] = true;
 					stateMyTrain.changeState(11);
 					tsi.setSpeed(this.id, this.speed);
 				}	break;
@@ -355,14 +368,15 @@ public class Lab1 {
 				System.out.println("in state 13:"+semaphore910.availablePermits());
 				if( Arrays.equals(currSensor, sensors.get(14)) && !this.direction){ // 13,5
 					if(semaphore910.availablePermits() != 0 ){
-						this.semaphoreHolding[2] = true;
 						semaphore910.acquire();
+						this.semaphoreHolding[2] = true;
 					}
 					approachStation(stateMyTrain);
 				}
 				else if(Arrays.equals(currSensor, sensors.get(13))){
 					tsi.setSpeed(this.id, 0);
 					semaphore11c.acquire();
+					this.semaphoreHolding[5] = true;
 					stateMyTrain.changeState(11);
 					tsi.setSpeed(this.id, this.speed);
 				}
