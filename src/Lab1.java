@@ -31,8 +31,8 @@ public class Lab1 {
 		state1 = new State(12);
 		state2 = new State(3);
 		
-		new Thread(new Train(1, speed1, true)).start();
-		new Thread(new Train(2, speed2, false)).start();
+		new Thread(new Train(1, speed1, true, new boolean[]{false, false, false})).start();
+		new Thread(new Train(2, speed2, false, new boolean[]{false,false, false})).start();
 	}
 
 	public void addSensors(){
@@ -73,11 +73,14 @@ public class Lab1 {
 		private int id;
 		private int speed;
 		private boolean direction;
+		// represent semaphores that current train is holding. 
+		private boolean[] semaphoreHolding ;
 
-		public Train(int id,int speed, boolean direction) {
+		public Train(int id,int speed, boolean direction, boolean[]semaphores) {
 			this.id = id;
 			this.speed = speed;
 			this.direction = direction;
+			this.semaphoreHolding = semaphores;
 		}
 
 		public State chooseState(){
@@ -133,10 +136,12 @@ public class Lab1 {
 					}
 				}	break;
 			case 4:
-				System.out.println(this.id+","+this.direction + ","+semaphore34.availablePermits()+","+
-			semaphore5c.availablePermits());
+//				System.out.println(this.id+","+this.direction + ","+semaphore34.availablePermits()+","+
+//			semaphore5c.availablePermits());
+				System.out.println("in state 4:"+semaphore67.availablePermits() + "," + this.semaphoreHolding.toString());
 				if( Arrays.equals(currSensor, sensors.get(1)) && this.direction){ // 12,13
 					if(semaphore34.availablePermits() != 0){
+						this.semaphoreHolding[0] = true;
 						semaphore34.acquire();
 					}
 					approachStation(stateMyTrain);
@@ -152,11 +157,12 @@ public class Lab1 {
 					}
 				}	break;
 			case 5:
-				System.out.println("in state 5:"+semaphore34.availablePermits());
+				System.out.println("in state 5:"+semaphore67.availablePermits()+ "," + this.semaphoreHolding.toString());
 				tsi.setSpeed(this.id, 0);
 				if(this.direction){ // train runs from up to down
-					if(semaphore67.availablePermits() == 0){
+					if(semaphore67.availablePermits() == 0 && this.semaphoreHolding[1]){
 						semaphore67.release();
+						this.semaphoreHolding[1] = false;
 					}
 					if (semaphore34.availablePermits() == 0){
 						System.out.println("!!!!!!!!!!!");
@@ -164,20 +170,23 @@ public class Lab1 {
 						tsi.setSwitch(3, 11, 1);
 					}
 					else{
+						this.semaphoreHolding[0] = true;
 						semaphore34.acquire();
 						stateMyTrain.changeState(4);
 						tsi.setSwitch(3, 11, 0);
 					}
 				}
 				else{
-					if(semaphore34.availablePermits() == 0){
+					if(semaphore34.availablePermits() == 0 && this.semaphoreHolding[0]){
 						semaphore34.release();
+						this.semaphoreHolding[0]=false;
 					}
 					if(semaphore67.availablePermits() == 0){
 						stateMyTrain.changeState(6);
 						tsi.setSwitch(4, 9, 1);
 					}
 					else{
+						this.semaphoreHolding[1] = true;
 						semaphore67.acquire();
 						stateMyTrain.changeState(7);
 						tsi.setSwitch(4, 9, 0);
@@ -208,6 +217,7 @@ public class Lab1 {
 				break;
 
 			case 7:
+				System.out.println("in state 7:" + semaphore67.availablePermits());
 				if(Arrays.equals(currSensor, sensors.get(5))){ // 6,10
 					if(this.direction){
 						tsi.setSpeed(this.id, 0);
@@ -233,29 +243,32 @@ public class Lab1 {
 				System.out.println("in state 9:"+semaphore910.availablePermits());
 				tsi.setSpeed(this.id, 0);
 				if(this.direction ){
-					if (semaphore910.availablePermits() == 0) {
+					if (semaphore910.availablePermits() == 0 && this.semaphoreHolding[2]) {
 						semaphore910.release();
+						this.semaphoreHolding[2] = false;
 					}
 					if(semaphore67.availablePermits() == 0) {
 						stateMyTrain.changeState(6);
 						tsi.setSwitch(15, 9, 0);
 					}
 					else{
+						this.semaphoreHolding[1] = true;
 						semaphore67.acquire();
 						stateMyTrain.changeState(7);
 						tsi.setSwitch(15, 9, 1);
 					}
 				}
 				else{ // from down to up
-					if(semaphore67.availablePermits() == 0) {
+					if(semaphore67.availablePermits() == 0 && this.semaphoreHolding[1]) {
 						semaphore67.release();
+						this.semaphoreHolding[1] = false;
 					}
 					if(semaphore910.availablePermits() == 0){
 						stateMyTrain.changeState(10);
 						tsi.setSwitch(17, 7, 0);
 					}
 					else{
-						
+						this.semaphoreHolding[2] = true;
 						semaphore910.acquire();
 						stateMyTrain.changeState(9);
 						tsi.setSwitch(17, 7, 1); 
@@ -342,6 +355,7 @@ public class Lab1 {
 				System.out.println("in state 13:"+semaphore910.availablePermits());
 				if( Arrays.equals(currSensor, sensors.get(14)) && !this.direction){ // 13,5
 					if(semaphore910.availablePermits() != 0 ){
+						this.semaphoreHolding[2] = true;
 						semaphore910.acquire();
 					}
 					approachStation(stateMyTrain);
