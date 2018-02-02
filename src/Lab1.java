@@ -48,8 +48,8 @@ public class Lab1 {
 		sensors.put(9, new int[]{14,7});
 		sensors.put(10, new int[]{11,8});
 		sensors.put(11, new int[]{11,7});
-		sensors.put(12, new int[]{6,7});
-		sensors.put(13, new int[]{8,5});
+		sensors.put(12, new int[]{6,6});
+		sensors.put(13, new int[]{9,5});
 		sensors.put(14, new int[]{13,5});
 		sensors.put(15, new int[]{12,3});
 		sensors.put(16, new int[]{19,8});
@@ -342,7 +342,6 @@ public class Lab1 {
 				}
 				else{
 					if(!this.direction){
-						System.out.println("8,5");
 						System.out.println(this.id+","+stateMyTrain+",semaphore11:"+semaphore11c.availablePermits());
 						stateMyTrain.changeState(13);
 					}
