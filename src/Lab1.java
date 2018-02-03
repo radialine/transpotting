@@ -31,6 +31,9 @@ public class Lab1 {
 		state1 = new State(12);
 		state2 = new State(3);
 		
+		if(speed1 > 18) { speed1 = 18; }
+		if(speed2 > 18) { speed2 = 18; }
+		
 		new Thread(new Train(1, speed1, true, new boolean[]{false, false, false, false, false, false})).start();
 		new Thread(new Train(2, speed2, false, new boolean[]{false,false, false, false, false, false})).start();
 	}
