@@ -120,7 +120,7 @@ public class Lab1 {
 		public void updateState(State stateMyTrain,int xPos,int yPos,int TrainId) throws InterruptedException, CommandException{
 			int[] currSensor = new int[]{xPos, yPos}; 
 			// based on current state, and current activated sensor
-			System.out.println("state:" + stateMyTrain.getState()+" trainid:" + this.id);
+			System.out.println("state:" + stateMyTrain.getState()+", trainid:" + this.id);
 			switch(stateMyTrain.getState()){
 			case 3: 
 				if( Arrays.equals(currSensor, sensors.get(0)) && this.direction){ // 12,11
@@ -139,8 +139,7 @@ public class Lab1 {
 				}	break;
 			case 4:
 				if( Arrays.equals(currSensor, sensors.get(1)) && this.direction){ // 12,13
-					if(semaphore34.availablePermits() != 0){
-						semaphore34.acquire();
+					if(semaphore34.tryAcquire(1)){ 
 						this.semaphoreHolding[0] = true;
 					}
 					approachStation(stateMyTrain);
@@ -159,36 +158,33 @@ public class Lab1 {
 			case 5:
 				tsi.setSpeed(this.id, 0);
 				if(this.direction){ // train runs from up to down
-					if(semaphore67.availablePermits() == 0 && this.semaphoreHolding[1]){
+					if(this.semaphoreHolding[1]){
 						semaphore67.release();
 						this.semaphoreHolding[1] = false;
 					}
-					if (semaphore34.availablePermits() == 0){
-						stateMyTrain.changeState(3);
-						tsi.setSwitch(3, 11, 1);
-					}
-					else{
-						
-						semaphore34.acquire();
+					if(semaphore34.tryAcquire(1)){
 						this.semaphoreHolding[0] = true;
 						stateMyTrain.changeState(4);
 						tsi.setSwitch(3, 11, 0);
 					}
+					else{
+						stateMyTrain.changeState(3);
+						tsi.setSwitch(3, 11, 1);
+					}
 				}
 				else{
-					if(semaphore34.availablePermits() == 0 && this.semaphoreHolding[0]){
+					if(this.semaphoreHolding[0]){
 						semaphore34.release();
 						this.semaphoreHolding[0]=false;
 					}
-					if(semaphore67.availablePermits() == 0){
-						stateMyTrain.changeState(6);
-						tsi.setSwitch(4, 9, 1);
-					}
-					else{
-						semaphore67.acquire();
+					if(semaphore67.tryAcquire(1)){
 						this.semaphoreHolding[1] = true;
 						stateMyTrain.changeState(7);
 						tsi.setSwitch(4, 9, 0);
+					}
+					else{
+						stateMyTrain.changeState(6);
+						tsi.setSwitch(4, 9, 1);
 					}
 				} 
 				tsi.setSpeed(this.id, this.speed);
@@ -244,35 +240,33 @@ public class Lab1 {
 			case 8: 
 				tsi.setSpeed(this.id, 0);
 				if(this.direction ){
-					if (semaphore910.availablePermits() == 0 && this.semaphoreHolding[2]) {
+					if (this.semaphoreHolding[2]) {
 						semaphore910.release();
 						this.semaphoreHolding[2] = false;
 					}
-					if(semaphore67.availablePermits() == 0) {
-						stateMyTrain.changeState(6);
-						tsi.setSwitch(15, 9, 0);
-					}
-					else{
-						semaphore67.acquire();
+					if(semaphore67.tryAcquire(1)) {
 						this.semaphoreHolding[1] = true;
 						stateMyTrain.changeState(7);
 						tsi.setSwitch(15, 9, 1);
 					}
+					else{
+						stateMyTrain.changeState(6);
+						tsi.setSwitch(15, 9, 0);
+					}
 				}
 				else{ // from down to up
-					if(semaphore67.availablePermits() == 0 && this.semaphoreHolding[1]) {
+					if(this.semaphoreHolding[1]) {
 						semaphore67.release();
 						this.semaphoreHolding[1] = false;
 					}
-					if(semaphore910.availablePermits() == 0){
-						stateMyTrain.changeState(10);
-						tsi.setSwitch(17, 7, 0);
-					}
-					else{
-						semaphore910.acquire();
+					if(semaphore910.tryAcquire(1)){
 						this.semaphoreHolding[2] = true;
 						stateMyTrain.changeState(9);
-						tsi.setSwitch(17, 7, 1); 
+						tsi.setSwitch(17, 7, 1);
+					}
+					else{
+						stateMyTrain.changeState(10);
+						tsi.setSwitch(17, 7, 0);
 					}
 				} 
 				tsi.setSpeed(this.id, this.speed);
@@ -348,8 +342,7 @@ public class Lab1 {
 				}	break;
 			case 13:
 				if( Arrays.equals(currSensor, sensors.get(14)) && !this.direction){ // 13,5
-					if(semaphore910.availablePermits() != 0 ){
-						semaphore910.acquire();
+					if(semaphore910.tryAcquire(1)){
 						this.semaphoreHolding[2] = true;
 					}
 					approachStation(stateMyTrain);
